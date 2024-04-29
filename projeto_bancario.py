@@ -1,4 +1,4 @@
-saldo = 0
+saldo = 50
 limite = 500
 extrato = ''
 numero_saques = 0
