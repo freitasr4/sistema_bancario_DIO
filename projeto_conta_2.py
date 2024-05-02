@@ -8,6 +8,7 @@ total_saque = 0
 LIMITE_SAQUE = 0
 AGENCIA = '0001'
 historico = ''
+cpf_usuario_atual = None
 
 def menu():
     print(f"""\n-----------------------------
@@ -26,7 +27,8 @@ Selecione a operação desejada:
 """)
 
 def cadastro_usuario(nome, data_nascimento, cpf, endereco):
-    global usuarios
+    global usuarios, cpf_usuario_atual
+    cpf_usuario_atual = cpf
     usuarios.append({
         'Nome': nome,
         'Data Nascimento': data_nascimento,
@@ -35,13 +37,13 @@ def cadastro_usuario(nome, data_nascimento, cpf, endereco):
     })
     print('Usuário cadastrado com sucesso.\n')
 
-def criar_conta_corrente(usuario):
-    global dados_bancarios, conta, AGENCIA
+def criar_conta_corrente():
+    global dados_bancarios, conta, AGENCIA, cpf_usuario_atual
     conta += 1
     dados_bancarios.append({
         'Agencia': AGENCIA,
         'Conta corrente': conta,
-        'Usuário': usuario
+        'Usuário': cpf_usuario_atual
     })
     print('Conta corrente aberta com sucesso.\n')
 
@@ -111,7 +113,7 @@ while True:
         cadastro_usuario(nome_usuario, nascimento, cpf_usuario, endereco_usuario)
         
     elif operacao == 2:
-        criar_conta_corrente(cpf_usuario)
+        criar_conta_corrente()
         
     elif operacao == 3:
         deposito = float(input('Valor do depósito:\nR$ '))
