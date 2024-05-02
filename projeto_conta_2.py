@@ -1,14 +1,11 @@
 usuarios = []
-dados_bancarios = []
-conta = 0
-saldo_conta = 0
-saque = 0
-op_saldo = 0
-total_saque = 0
-LIMITE_SAQUE = 0
-AGENCIA = '0001'
-historico = ''
-cpf_usuario_atual = None
+AGENCIA = '007'
+saldo = 10
+limite = 500
+numero_saques = 0
+extrato = ''
+lista_cpf = []
+contas = []
 
 def menu():
     print(f"""\n-----------------------------
@@ -16,120 +13,136 @@ def menu():
 -----------------------------
 Selecione a operação desejada:
 
-[1] - Cadastrar usuário
-[2] - Abrir conta corrente
-[3] - Depósito
-[4] - Saque
-[5] - Visualizar extrato
-[6] - Listar contas
+[1] - Depositar
+[2] - Sacar
+[3] - Extrato
+[4] - Nova conta
+[5] - Listar contas
+[6] - Novo usuário
 [0] - Sair
 
 """)
 
-def cadastro_usuario(nome, data_nascimento, cpf, endereco):
-    global usuarios, cpf_usuario_atual
-    cpf_usuario_atual = cpf
-    usuarios.append({
-        'Nome': nome,
-        'Data Nascimento': data_nascimento,
-        'Cpf': cpf,
-        'Endereço': endereco,
-    })
-    print('Usuário cadastrado com sucesso.\n')
+def cadastrar_cliente():
+    global usuarios
+    cpf = input('Informe o CPF: ')
+    if cpf in lista_cpf:
+        print('CPF já registrado')
+    else:
+        nome = input('Informe o nome completo: ')
+        data_nascimento = input('Informe a data de nascimento (ex: 07/12/1991): ')
+        endereco = input('Informe o endereço (ex: Rua Raul Veiga nº 129 - Quitandinha / Petrópolis / RJ)')
 
-def criar_conta_corrente():
-    global dados_bancarios, conta, AGENCIA, cpf_usuario_atual
-    conta += 1
-    dados_bancarios.append({
-        'Agencia': AGENCIA,
-        'Conta corrente': conta,
-        'Usuário': cpf_usuario_atual
-    })
-    print('Conta corrente aberta com sucesso.\n')
+        cliente = {'CPF': cpf,
+                   'Nome': nome,
+                   'Data de Nascimento': data_nascimento,
+                   'Endereço': endereco}
 
-def depositar(valor, extrato):
-    global saldo_conta
-    if valor <= 0:
-        print("Valor de depósito inválido.")
-        return extrato
+        usuarios.append(cliente)
+        lista_cpf.append(cpf)
+
+        print('Cliente cadastrado com sucesso! Bem vindo ao Banco do Povo =)')
+
+def criar_conta(agencia, numero_conta, usuarios):
+    cpf = input('Informe o CPF do usuário: ')
+
+    if cpf in lista_cpf:
+
+        numero_conta = len(contas) + 1
+
+        nova_conta = {
+            'Agência ': agencia,
+            'Número da conta ': numero_conta,
+            'CPF Titular ': cpf,
+            'Saldo ': 0
+
+        }
+
+        contas.append(nova_conta)
+
+        print(f'Conta criada com sucesso! Numero da conta: {numero_conta}')
+    
+    else:
+        print('CPF não registrado.')
+
+
+def depositar(saldo, valor, extrato, /): #Recebe argumentos por posição
+    if valor > 0:
+        saldo += valor
+        extrato += f'Deposito: R$ {valor}\n'
+        print('Depósito efetuado com sucesso!')
+    else:
+        print('Operação falhou! Valor informado é inválido')
+    
+    return saldo, extrato
+
+def saque(*, saldo, valor, extrato, limite, numero_saques): #Recebe argumentos nomeados
+    
+    excedeu_saldo = valor > saldo
+
+    excedeu_limite = valor > limite
+
+    excedeu_saques = numero_saques == 3
+
+    if excedeu_saldo:
+        print('Operação falhou! Não tem saldo suficiente!')
+
+    elif excedeu_limite:
+        print('Operação falhou! Ultrapassou limite de saques!')
+
+    elif excedeu_saques:
+        print('Operação falhou! Ultrapassado o limite de saques diarios!')
         
-    saldo_conta += valor
-    extrato = f'-------------------------\nÚltimo depósito: R$ {valor}\nSaldo da conta: R$ {saldo_conta}'
-    return extrato
+    elif valor > 0:
+        saldo -= valor
+        extrato += f'Saque: R$ {valor}'
+        numero_saques += 1
+    
+    return saldo, extrato, numero_saques
 
-def sacar(valor_saque, extrato, numero_saques):
-    global LIMITE_SAQUE, saldo_conta
-    
-    if valor_saque <= 0:
-        print("Valor de saque inválido.")
-        return extrato
-    
-    if valor_saque > saldo_conta:
-        print("Saldo insuficiente.")
-        return extrato
-    
-    if valor_saque > 500:
-        print("Limite de saque excedido (máx. R$500).")
-        return extrato
-    
-    if LIMITE_SAQUE >= 3:
-        print("Limite de saque diário excedido.")
-        return extrato
-    
-    LIMITE_SAQUE += 1
-    saldo_conta -= valor_saque
-    extrato = f'-------------------------\nValor sacado: R$ {valor_saque}\nSaldo da conta: R$ {saldo_conta}'
-    return extrato
+def exibir_extrato(saldo,/,*,extrato): #Recebe argumentos tanto de forma posicional quanto nomeados
+    print('EXTRATO')
+    if not extrato:
+        print('Não foram encontradas movimentações')
+    else:
+        print(extrato)
+    print(f'\nSaldo: R$ {saldo}')
+    print('==========================')
 
-def visualizar_historico(saldo, comprovante):
-    print(comprovante)
-    print(f'\nSaldo atual: R${saldo}')
+def listar_contas():
+    global contas
 
-def contas_criadas(dados):
-    for dado in dados:
-        print('------------Contas-----------')
-        print(f'Agência: {dado["Agencia"]}')
-        print(f'C/C: {dado["Conta corrente"]}')
-        print(f'Usuário: {dado["Usuário"]}')
-        print()
+    for conta in contas:
+        print(f' Lista de contas: {conta}')
+
 
 while True:
-    menu()
-    operacao = int(input('Operação: '))
+    print(menu())
+    operacao = int(input('Digite a operação desejada: '))
 
     if operacao == 1:
-        saldo_conta, dados_bancarios = 0, []
-        nome_usuario = input('Nome completo: ')
-        nascimento = input('Data nascimento - (Ex: 15/05/1999): ')
-        cpf_usuario = int(input('CPF: '))
-        
-        for usuario in usuarios:
-            if cpf_usuario == usuario['Cpf']:
-                print('\nCPF inválido!\nPor favor insira o CPF correto...')
-                cpf_usuario = int(input('CPF: '))
-                break
-        
-        endereco_usuario = input('Endereço - (Ex: RUA RAUL VEIGA, Bairro QUITANDINHA, 25652 - Petrópolis / RJ): ')
-        cadastro_usuario(nome_usuario, nascimento, cpf_usuario, endereco_usuario)
-        
+        valor_deposito = float(input('Digite o valor do depósito: '))
+        saldo, extrato = depositar(saldo, valor_deposito, extrato)
+
     elif operacao == 2:
-        criar_conta_corrente()
-        
+        valor_saque = float(input('Digite o valor que deseja sacar: '))
+        saldo, extrato, numero_saques = saque(saldo=saldo, valor=valor_saque, extrato=extrato, limite=limite, numero_saques=numero_saques)
+
     elif operacao == 3:
-        deposito = float(input('Valor do depósito:\nR$ '))
-        historico = depositar(deposito, historico)
-        
+        exibir_extrato(saldo, extrato=extrato)
+
     elif operacao == 4:
-        saque = float(input('Valor de saque:\nR$ '))
-        op_saldo = saldo_conta
-        historico = sacar(saque, historico, LIMITE_SAQUE)
-        
+       criar_conta(AGENCIA, len(contas) +1, usuarios)
+
     elif operacao == 5:
-        visualizar_historico(saldo_conta, comprovante=historico)
-    
+        listar_contas()
+
     elif operacao == 6:
-        contas_criadas(dados_bancarios)
+        cadastrar_cliente()
+
+    elif operacao == 0:
+        print('O Banco do povo agradece sua visita!')
+        break
 
     else:
-        print('O Banco do Povo agradece sua visita!')
-        break
+        print('Por favor escolha uma opção correta...')
