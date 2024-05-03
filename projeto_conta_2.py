@@ -24,7 +24,7 @@ Selecione a operação desejada:
 """)
 
 def cadastrar_cliente():
-    global usuarios
+    global usuarios, lista_cpf
     cpf = input('Informe o CPF: ')
     if cpf in lista_cpf:
         print('CPF já registrado')
@@ -44,6 +44,7 @@ def cadastrar_cliente():
         print('Cliente cadastrado com sucesso! Bem vindo ao Banco do Povo =)')
 
 def criar_conta(agencia, numero_conta, usuarios):
+    global contas, lista_cpf
     cpf = input('Informe o CPF do usuário: ')
 
     if cpf in lista_cpf:
@@ -66,7 +67,8 @@ def criar_conta(agencia, numero_conta, usuarios):
         print('CPF não registrado.')
 
 
-def depositar(saldo, valor, extrato, /): #Recebe argumentos por posição
+def depositar(saldo, valor):
+    global extrato
     if valor > 0:
         saldo += valor
         extrato += f'Deposito: R$ {valor}\n'
@@ -76,12 +78,14 @@ def depositar(saldo, valor, extrato, /): #Recebe argumentos por posição
     
     return saldo, extrato
 
-def saque(*, saldo, valor, extrato, limite, numero_saques): #Recebe argumentos nomeados
-    
+def saque(saldo, valor): 
+    global extrato, numero_saques
+    if valor <= 0:
+        print('Operação falhou! Valor inválido.')
+        return saldo, extrato
+
     excedeu_saldo = valor > saldo
-
     excedeu_limite = valor > limite
-
     excedeu_saques = numero_saques == 3
 
     if excedeu_saldo:
@@ -91,16 +95,19 @@ def saque(*, saldo, valor, extrato, limite, numero_saques): #Recebe argumentos n
         print('Operação falhou! Ultrapassou limite de saques!')
 
     elif excedeu_saques:
-        print('Operação falhou! Ultrapassado o limite de saques diarios!')
+        print('Operação falhou! Ultrapassado o limite de saques diários!')
         
-    elif valor > 0:
+    else:
         saldo -= valor
-        extrato += f'Saque: R$ {valor}'
+        extrato += f'Saque: R$ {valor}\n'
         numero_saques += 1
     
-    return saldo, extrato, numero_saques
+    return saldo, extrato
 
-def exibir_extrato(saldo,/,*,extrato): #Recebe argumentos tanto de forma posicional quanto nomeados
+
+def exibir_extrato(): 
+    global saldo
+    global extrato
     print('EXTRATO')
     if not extrato:
         print('Não foram encontradas movimentações')
@@ -111,7 +118,6 @@ def exibir_extrato(saldo,/,*,extrato): #Recebe argumentos tanto de forma posicio
 
 def listar_contas():
     global contas
-
     for conta in contas:
         print(f' Lista de contas: {conta}')
 
@@ -122,17 +128,18 @@ while True:
 
     if operacao == 1:
         valor_deposito = float(input('Digite o valor do depósito: '))
-        saldo, extrato = depositar(saldo, valor_deposito, extrato)
+        saldo, extrato = depositar(saldo, valor_deposito)
 
     elif operacao == 2:
         valor_saque = float(input('Digite o valor que deseja sacar: '))
-        saldo, extrato, numero_saques = saque(saldo=saldo, valor=valor_saque, extrato=extrato, limite=limite, numero_saques=numero_saques)
+        saldo, extrato = saque(saldo, valor_saque)
+
 
     elif operacao == 3:
-        exibir_extrato(saldo, extrato=extrato)
+        exibir_extrato()
 
     elif operacao == 4:
-       criar_conta(AGENCIA, len(contas) +1, usuarios)
+       criar_conta(AGENCIA, len(contas) + 1, usuarios)
 
     elif operacao == 5:
         listar_contas()
@@ -146,3 +153,7 @@ while True:
 
     else:
         print('Por favor escolha uma opção correta...')
+
+
+
+
